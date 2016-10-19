@@ -32,7 +32,7 @@
 	map.addControl( new L.Control.Gps({autoActive:true}) );//inizialize control
 
 
-	  var RedRiego = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var RedRiego = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:RedRiego',
 				format: 'image/png',
 				transparent: true,
@@ -41,7 +41,7 @@
 				attribution: "Puertos/GIS"
 		}).addTo(map);
 
-	  var RedPotable = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var RedPotable = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:RedPotable',
 				format: 'image/png',
 				transparent: true,
@@ -51,7 +51,7 @@
 		}).addTo(map);
 
 
-	  var RedCloacas = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var RedCloacas = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:RedCloacas',
 				format: 'image/png',
 				transparent: true,
@@ -60,7 +60,7 @@
 				attribution: "Puertos/GIS"
 		}).addTo(map);
 
-	  var lotes = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var lotes = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:lotes',
 				format: 'image/png',
 				transparent: true,
@@ -69,7 +69,7 @@
 				attribution: "Puertos/GIS"
 		}).addTo(map);
 
-	  var lotesymas = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var lotesymas = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:lotesymas',
 				format: 'image/png',
 				transparent: true,
@@ -77,7 +77,6 @@
 				maxZoom:35,
 				attribution: "Puertos/GIS"
 		}).addTo(map);
-
 
 var nada = L.tileLayer('');
 var base = {
