@@ -1,45 +1,173 @@
+(function() {
 
-.leaflet-container .leaflet-control-gps {
-	position:relative;
-	float:left;
-	background:#fff;
-	color:#1978cf;
-	-moz-border-radius: 4px;
-	-webkit-border-radius: 4px;
-	border-radius: 4px;
-	/*background-color: rgba(0, 0, 0, 0.25);*/
-	background-color: rgba(255, 255, 255, 0.8);
-	z-index:1000;	
-	box-shadow: 0 1px 7px rgba(0,0,0,0.65);
-	margin-left:10px;
-	margin-top:10px;
-}
-.leaflet-control-gps .gps-button {
-	display:block;
-	float:left;
-	width:26px;
-	height:26px;
-	background: url('../images/gps-icon.png') no-repeat 2px 2px;
-	border-radius:4px;
-}
-.leaflet-control-gps .gps-button:hover,
-.leaflet-control-gps .gps-button.active:hover {
-	background: url('../images/gps-icon.png') no-repeat 2px -24px #fff;
-}
-.leaflet-control-gps .gps-button.active {
-	background: url('../images/gps-icon.png') no-repeat 2px -50px #fff;
-}
+L.Control.Gps = L.Control.extend({
 
-.leaflet-control-gps .gps-alert {
-	position:absolute;
-	left:26px;
-	bottom:-1px;
-	width:100px;
-	padding:2px;
-	line-height:.95em;
-	color:#e00;
-	border: 1px solid #888;	
-	background-color: rgba(255, 255, 255, 0.75);
-	border-radius:4px;
-}
+	includes: L.Mixin.Events,
+	//
+	//Managed Events:
+	//	Event			Data passed			Description
+	//
+	//	gpslocated		{latlng, marker}	fired after gps marker is located
+	//	gpsdisabled							fired after gps is disabled
+	//
+	//Methods exposed:
+	//	Method 			Description
+	//
+	//  getLocation		return Latlng and marker of current position
+	//  activate		active tracking on runtime
+	//  deactivate		deactive tracking on runtime
+	//
+	options: {
+		autoActive: false,		//activate control at startup
+		autoCenter: false,		//move map when gps location change
+		maxZoom: null,			//max zoom for autoCenter
+		textErr: null,			//error message on alert notification
+		callErr: null,			//function that run on gps error activating
+		style: {				//default L.CircleMarker styles
+			radius: 5,
+			weight: 2,
+			color: '#fff',
+			opacity: 1,
+			fillColor: '#23f',
+			fillOpacity: 1
+		},
+		marker: null,			//L.Marker used for location, default use a L.CircleMarker
+		accuracy: true,		//show accuracy Circle
+		title: 'Center map on your location',
+		position: 'topleft',
+		transform: function(latlng) { return latlng },
+		setView: false
+		//TODO add gpsLayer
+		//TODO timeout autoCenter
+	},
 
+	initialize: function(options) {
+		if(options && options.style)
+			options.style = L.Util.extend({}, this.options.style, options.style);
+		L.Util.setOptions(this, options);
+		this._errorFunc = this.options.callErr || this.showAlert;
+		this._isActive = false;//global state of gps
+		this._firstMoved = false;//global state of gps
+		this._currentLocation = null;	//store last location
+	},
+
+	onAdd: function (map) {
+
+		this._map = map;
+
+		var container = L.DomUtil.create('div', 'leaflet-control-gps');
+
+		this._button = L.DomUtil.create('a', 'gps-button', container);
+		this._button.href = '#';
+		this._button.title = this.options.title;
+		L.DomEvent
+			.on(this._button, 'click', L.DomEvent.stop, this)
+			.on(this._button, 'click', this._switchGps, this);
+
+		this._alert = L.DomUtil.create('div', 'gps-alert', container);
+		this._alert.style.display = 'none';
+
+		this._gpsMarker = this.options.marker ? this.options.marker : new L.CircleMarker([0,0], this.options.style);
+		//if(this.options.accuracy)
+		//	this._accuracyCircle = new L.Circle([0,0], this.options.style);
+
+		this._map
+			.on('locationfound', this._drawGps, this)
+			.on('locationerror', this._errorGps, this);
+
+		if(this.options.autoActive)
+			this.activate();
+
+		return container;
+	},
+
+	onRemove: function(map) {
+		this.deactivate();
+	},
+
+	_switchGps: function() {
+		if(this._isActive)
+			this.deactivate();
+		else
+			this.activate();
+	},
+
+	getLocation: function() {	//get last location
+		return this._currentLocation;
+	},
+
+	activate: function() {
+		this._isActive = true;
+		this._map.addLayer( this._gpsMarker );
+		this._map.locate({
+			enableHighAccuracy: true,
+			watch: true,
+			//maximumAge:s
+			setView: this.options.setView,	//automatically sets the map view to the user location
+			maxZoom: this.options.maxZoom
+		});
+	},
+
+	deactivate: function() {
+			this._isActive = false;
+		this._firstMoved = false;
+		this._map.stopLocate();
+		L.DomUtil.removeClass(this._button, 'active');
+		this._map.removeLayer( this._gpsMarker );
+		//this._gpsMarker.setLatLng([-90,0]);  //move to antarctica!
+		//TODO make method .hide() using _icon.style.display = 'none'
+		this.fire('gpsdisabled');
+	},
+
+	_drawGps: function(e) {
+		//TODO use e.accuracy for gps circle radius/color
+		this._currentLocation = this.options.transform(e.latlng);
+
+		this._gpsMarker.setLatLng(this._currentLocation);
+
+		if(this._isActive && (!this._firstMoved || this.options.autoCenter))
+			this._moveTo(this._currentLocation);
+	//    	if(this._gpsMarker.accuracyCircle)
+	//    		this._gpsMarker.accuracyCircle.setRadius((e.accuracy / 2).toFixed(0));
+
+		this.fire('gpslocated', {latlng: this._currentLocation, marker: this._gpsMarker});
+
+		L.DomUtil.addClass(this._button, 'active');
+	},
+
+	_moveTo: function(latlng) {
+		this._firstMoved = true;
+		if(this.options.maxZoom)
+			this._map.setView(latlng, Math.min(this._map.getZoom(), this.options.maxZoom) );
+		else
+			this._map.panTo(latlng);
+	},
+
+	_errorGps: function(e) {
+		this.deactivate();
+		this._errorFunc.call(this, this.options.textErr || e.message);
+	},
+
+/*	_updateAccuracy: function (event) {
+		var newZoom = this._map.getZoom(),
+			scale = this._map.options.crs.scale(newZoom);
+		this._gpsMarker.setRadius(this.options.style.radius * scale);
+		this._gpsMarker.redraw();
+	},
+*/
+	showAlert: function(text) {
+		this._alert.style.display = 'block';
+		this._alert.innerHTML = text;
+		var that = this;
+		clearTimeout(this.timerAlert);
+		this.timerAlert = setTimeout(function() {
+			that._alert.style.display = 'none';
+		}, 2000);
+	}
+});
+
+L.control.gps = function (options) {
+	return new L.Control.Gps(options);
+};
+
+}).call(this);
