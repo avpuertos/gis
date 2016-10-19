@@ -17,9 +17,12 @@
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
 <script src="src/leaflet-gps.js"></script>
+
+<!--
 <script src="https://maps.google.com/maps/api/js?v=3&sensor=false"></script>
 <script src="layer/tile/Google.js"></script>
-
+-->
+	
 <script>
 	var map = new L.Map('map', {zoom: 20, maxZoom:35, center: new L.latLng([-34.328482, -58.727546]) });
 
@@ -29,7 +32,7 @@
 	map.addControl( new L.Control.Gps({autoActive:true}) );//inizialize control
 
 
-	  var RedRiego = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var RedRiego = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:RedRiego',
 				format: 'image/png',
 				transparent: true,
@@ -38,7 +41,7 @@
 				attribution: "Puertos/GIS"
 		}).addTo(map);
 
-	  var RedPotable = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var RedPotable = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:RedPotable',
 				format: 'image/png',
 				transparent: true,
@@ -48,7 +51,7 @@
 		}).addTo(map);
 
 
-	  var RedCloacas = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
+	  var RedCloacas = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:RedCloacas',
 				format: 'image/png',
 				transparent: true,
@@ -57,8 +60,7 @@
 				attribution: "Puertos/GIS"
 		}).addTo(map);
 
-	  var lotes = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
-//	  L.tileLayer.wms("http://10.0.0.50:8080/geoserver/prt/wms", {
+	  var lotes = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:lotes',
 				format: 'image/png',
 				transparent: true,
@@ -67,8 +69,7 @@
 				attribution: "Puertos/GIS"
 		}).addTo(map);
 
-	  var lotesymas = L.tileLayer.wms("http://gis.avpuertos.com:8080/geoserver/prt/wms", {
-//	  L.tileLayer.wms("http://10.0.0.50:8080/geoserver/prt/wms", {
+	  var lotesymas = L.tileLayer.wms("//gis.avpuertos.com:8080/geoserver/prt/wms", {
 				layers: 'prt:lotesymas',
 				format: 'image/png',
 				transparent: true,
@@ -81,11 +82,8 @@
 var nada = L.tileLayer('');
 var base = {
    "Base lotes": lotes,
-   "Base completa": lotesymas,
-//   "Sin Mapa": nada,
-//    "GoogleMaps": ggl
+   "Base completa": lotesymas
 };
-
 
 var mapasel = {
     "Riego": RedRiego,
